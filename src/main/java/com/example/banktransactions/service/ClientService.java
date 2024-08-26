@@ -13,13 +13,16 @@ import java.util.Optional;
 public class ClientService {
     private final ClientRepository clientRepository;
 
+    //TODO -1 JUnit Test for this method
     public Client clientFromOptional(Long clientId) throws RuntimeException{
         Optional<Client> clientOpt = clientRepository.findById(clientId);
         if(clientOpt.isPresent()){
-            Client client = clientOpt.get();
-            return client;
-        } else {
-            throw new ClientNotFoundE("Client not found.");
+            return clientOpt.get();
         }
+        throw new ClientNotFoundE("Client not found.");
+    }
+
+    public void createNewClient(String name){
+        clientRepository.save(new Client(name));
     }
 }

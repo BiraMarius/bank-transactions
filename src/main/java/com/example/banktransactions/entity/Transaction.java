@@ -39,6 +39,14 @@ public class Transaction {
 //    private Balance balance;
 
 
+    public Transaction(Account account, BigDecimal amount, Currency currency, Direction direction, String description) {
+        this.account = account;
+        this.amount = amount;
+        this.currency = currency;
+        this.direction = direction;
+        this.description = description;
+    }
+
     public Long getId() {
         return id;
     }

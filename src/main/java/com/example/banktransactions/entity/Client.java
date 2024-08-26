@@ -25,6 +25,10 @@ public class Client {
     @Column
     private String name;
 
+    public Client(String name) {
+        this.name = name;
+    }
+
     public Long getClientId() {
         return clientId;
     }

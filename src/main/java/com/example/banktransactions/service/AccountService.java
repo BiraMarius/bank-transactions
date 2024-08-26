@@ -1,16 +1,21 @@
 package com.example.banktransactions.service;
 
 import com.example.banktransactions.entity.*;
+import com.example.banktransactions.exception.AccountEx;
 import com.example.banktransactions.exception.CurrencyAccountExists;
 import com.example.banktransactions.exception.CurrencyDoesNotExists;
 import com.example.banktransactions.repository.AccountRepository;
 import com.example.banktransactions.repository.BalanceRepository;
 import com.example.banktransactions.repository.ClientRepository;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -26,38 +31,7 @@ public class AccountService {
         this.balanceRepository = balanceRepository;
     }
 
-    public Balance openCurrencyAccount(String currency, Long clientId) throws RuntimeException{
-        Client client = clientService.clientFromOptional(clientId);
-        List<Balance> balances = client.getAccount().getBalances();
-        if(balances.isEmpty()){
-            return createNewBalance(currency, client);
-        } else {
-            doesBalanceExists(currency, balances);
-        }
-        throw new CurrencyAccountExists("ERROR");
-    }
 
-    private void doesBalanceExists(String currency, List<Balance> balances) throws RuntimeException{
-        for(Balance balance : balances){
-            if(balance.getCurrency().name().equalsIgnoreCase(currency)){
-                throw new CurrencyAccountExists("You already have an account with your desired currency. Please check \"Balances\"");
-            }
-        }
-    }
-
-    private Balance createNewBalance(String currency, Client client) throws RuntimeException{
-        for(Currency currency1 : Currency.values()){
-            if(currency1.name().equalsIgnoreCase(currency)){
-                Balance balance = new Balance(client.getAccount(), BigDecimal.valueOf(0));
-                balance.setCurrency(currency1);
-                client.getAccount().getBalances().add(balance);
-                balanceRepository.save(balance);
-                clientRepository.save(client);
-                return balance;
-            }
-        }
-        throw new CurrencyDoesNotExists("Your desired currency doesn't exists. Please enter a valid one.");
-    }
 
 //    public boolean accountExists(String currency, Long clientId) throws RuntimeException{
 //        Client client = clientService.clientFromOptional(clientId);
@@ -72,10 +46,11 @@ public class AccountService {
 //        return false;
 //    }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public Account createAccount(Long clientId, String country) throws RuntimeException{
         Client client = clientService.clientFromOptional(clientId);
         if(client.getAccount() == null){
-            Account account = new Account(client, country, new ArrayList<Balance>(), new ArrayList<Transaction>());
+            Account account = new Account(client, country, new ArrayList<>(), new ArrayList<>());
             client.setAccount(account);
             accountRepository.save(account);
             clientRepository.save(client);
@@ -84,4 +59,21 @@ public class AccountService {
             throw new CurrencyAccountExists("An account for this client already exists!");
         }
     }
+
+    public Account getAccountById(Long accountId) throws RuntimeException{
+        Optional<Account> accountOpt = accountRepository.findById(accountId);
+        if(accountOpt.isPresent()){
+            return accountOpt.get();
+        } else {
+            throw new AccountEx("Account not found.");
+        }
+    }
+
+
+
+    public Optional<Account> getAccountOptional(Long accountId){
+        return  accountRepository.findById(accountId);
+    }
+
+    //TODO TABEL AUDIT CLIENT(clientId), Actiune, Description("created account for id..")
 }

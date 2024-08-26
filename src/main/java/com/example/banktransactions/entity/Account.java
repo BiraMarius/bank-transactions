@@ -29,9 +29,6 @@ public class Account {
     @Column
     private String country;
 
-//    @Column
-//    private Set<Currency> currencies;
-
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Balance> balances = new LinkedList<>();
 
